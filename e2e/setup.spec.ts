@@ -27,21 +27,21 @@ test.describe('Training setup', () => {
 
   test('should have multiplication selected by default', async ({ page }) => {
     const multiplicationLabel = page.locator('label').filter({ hasText: 'Умножение' })
-    await expect(multiplicationLabel).toHaveClass(/border-amber-400/)
+    await expect(multiplicationLabel).toHaveClass(/border-pink-400/)
   })
 
   test('should allow selecting multiple operations', async ({ page }) => {
     await page.locator('label').filter({ hasText: 'Сложение' }).click()
     const additionLabel = page.locator('label').filter({ hasText: 'Сложение' })
     const multiplicationLabel = page.locator('label').filter({ hasText: 'Умножение' })
-    await expect(additionLabel).toHaveClass(/border-amber-400/)
-    await expect(multiplicationLabel).toHaveClass(/border-amber-400/)
+    await expect(additionLabel).toHaveClass(/border-pink-400/)
+    await expect(multiplicationLabel).toHaveClass(/border-pink-400/)
   })
 
   test('should not allow deselecting last operation', async ({ page }) => {
     await page.locator('label').filter({ hasText: 'Умножение' }).click()
     const multiplicationLabel = page.locator('label').filter({ hasText: 'Умножение' })
-    await expect(multiplicationLabel).toHaveClass(/border-amber-400/)
+    await expect(multiplicationLabel).toHaveClass(/border-pink-400/)
   })
 
   test('should show specific number selector for single multiplication', async ({ page }) => {
@@ -64,12 +64,12 @@ test.describe('Training setup', () => {
   test('should change difficulty', async ({ page }) => {
     const hardButton = page.getByRole('button').filter({ hasText: 'Тяжёлый' }).first()
     await hardButton.click()
-    await expect(hardButton).toHaveClass(/border-amber-400/)
+    await expect(hardButton).toHaveClass(/border-pink-400/)
   })
 
   test('should change question count', async ({ page }) => {
     await page.getByRole('button', { name: '20', exact: true }).click()
-    await expect(page.getByRole('button', { name: '20', exact: true })).toHaveClass(/border-amber-400/)
+    await expect(page.getByRole('button', { name: '20', exact: true })).toHaveClass(/border-pink-400/)
   })
 
   test('should start training session', async ({ page }) => {

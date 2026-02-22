@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { generateQuestions } from '@/engine/generator'
+import FloatingElements from '@/components/effects/FloatingElements'
+import PageTransition from '@/components/effects/PageTransition'
+import AnimatedButton from '@/components/effects/AnimatedButton'
 import type { OperationType, DifficultyLevel } from '@/types'
 
 const OPERATIONS: { id: OperationType; label: string; icon: string }[] = [
@@ -72,139 +74,142 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-purple-900 via-indigo-900 to-blue-900 p-4">
-      <div className="w-full max-w-lg space-y-4 py-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-amber-300">Настройка тренировки</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/home')}
-            className="text-indigo-400 hover:text-white"
-          >
-            Назад
-          </Button>
-        </div>
+    <div className="relative flex min-h-screen flex-col items-center bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 p-4">
+      <FloatingElements />
+      <PageTransition>
+        <div className="relative z-10 w-full max-w-lg space-y-4 py-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-purple-600">Настройка тренировки</h1>
+            <AnimatedButton variant="ghost" size="sm" onClick={() => navigate('/home')}>
+              Назад
+            </AnimatedButton>
+          </div>
 
-        <Card className="border-amber-400/30 bg-indigo-950/80 text-white">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-amber-300">Операции</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            {OPERATIONS.map((op) => (
-              <label
-                key={op.id}
-                className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 transition-colors ${
-                  selectedOps.includes(op.id)
-                    ? 'border-amber-400 bg-amber-400/10'
-                    : 'border-indigo-700 hover:border-indigo-500'
-                }`}
-              >
-                <Checkbox
-                  checked={selectedOps.includes(op.id)}
-                  onCheckedChange={() => toggleOp(op.id)}
-                />
-                <span className="mr-1">{op.icon}</span>
-                <span className="text-sm">{op.label}</span>
-              </label>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-400/30 bg-indigo-950/80 text-white">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-amber-300">Сложность</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            {DIFFICULTIES.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setDifficulty(d.id)}
-                className={`rounded-lg border p-3 text-left text-sm transition-colors ${
-                  difficulty === d.id
-                    ? 'border-amber-400 bg-amber-400/10'
-                    : 'border-indigo-700 hover:border-indigo-500'
-                }`}
-              >
-                <span className="mr-1">{d.icon}</span>
-                {d.label}
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-400/30 bg-indigo-950/80 text-white">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base text-amber-300">Количество примеров</CardTitle>
-          </CardHeader>
-          <CardContent className="flex gap-3">
-            {QUESTION_COUNTS.map((count) => (
-              <button
-                key={count}
-                onClick={() => setQuestionCount(count)}
-                className={`flex-1 rounded-lg border p-3 text-center text-sm font-medium transition-colors ${
-                  questionCount === count
-                    ? 'border-amber-400 bg-amber-400/10 text-amber-300'
-                    : 'border-indigo-700 hover:border-indigo-500'
-                }`}
-              >
-                {count}
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-
-        {isSingleMultOrDiv && (
-          <Card className="border-amber-400/30 bg-indigo-950/80 text-white">
+          <Card className="border border-purple-100/50 bg-white/80 shadow-lg backdrop-blur-sm rounded-3xl">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base text-amber-300">
-                Тренировать конкретное число
-              </CardTitle>
+              <CardTitle className="text-lg font-bold text-purple-600">Операции</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSpecificNumber(null)}
-                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                    specificNumber === null
-                      ? 'border-amber-400 bg-amber-400/10 text-amber-300'
-                      : 'border-indigo-700 hover:border-indigo-500'
+            <CardContent className="grid grid-cols-2 gap-3">
+              {OPERATIONS.map((op) => (
+                <label
+                  key={op.id}
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg border p-3 transition-colors ${
+                    selectedOps.includes(op.id)
+                      ? 'border-pink-400 bg-pink-50 shadow-md'
+                      : 'border-purple-100 bg-white/60 hover:border-purple-300'
                   }`}
                 >
-                  Все
-                </button>
-                {SPECIFIC_NUMBERS.map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setSpecificNumber(n)}
-                    className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                      specificNumber === n
-                        ? 'border-amber-400 bg-amber-400/10 text-amber-300'
-                        : 'border-indigo-700 hover:border-indigo-500'
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
+                  <Checkbox
+                    checked={selectedOps.includes(op.id)}
+                    onCheckedChange={() => toggleOp(op.id)}
+                  />
+                  <span className="mr-1">{op.icon}</span>
+                  <span className="text-sm text-purple-700">{op.label}</span>
+                </label>
+              ))}
             </CardContent>
           </Card>
-        )}
 
-        <Card className="border-amber-400/30 bg-indigo-950/80 text-white">
-          <CardContent className="flex items-center justify-between py-4">
-            <Label className="text-sm text-indigo-200">Включить таймер</Label>
-            <Switch checked={timerEnabled} onCheckedChange={setTimerEnabled} />
-          </CardContent>
-        </Card>
+          <Card className="border border-purple-100/50 bg-white/80 shadow-lg backdrop-blur-sm rounded-3xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-bold text-purple-600">Сложность</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-3">
+              {DIFFICULTIES.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => setDifficulty(d.id)}
+                  className={`rounded-lg border p-3 text-left text-sm transition-colors ${
+                    difficulty === d.id
+                      ? 'border-pink-400 bg-pink-50 shadow-md'
+                      : 'border-purple-100 bg-white/60 hover:border-purple-300'
+                  }`}
+                >
+                  <span className="mr-1">{d.icon}</span>
+                  <span className="text-purple-700">{d.label}</span>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
 
-        <Button
-          onClick={handleStart}
-          className="h-14 w-full bg-amber-500 text-lg font-bold text-indigo-950 hover:bg-amber-400"
-        >
-          Начать! 🪄
-        </Button>
-      </div>
+          <Card className="border border-purple-100/50 bg-white/80 shadow-lg backdrop-blur-sm rounded-3xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-bold text-purple-600">
+                Количество примеров
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex gap-3">
+              {QUESTION_COUNTS.map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setQuestionCount(count)}
+                  className={`flex-1 rounded-lg border p-3 text-center text-sm font-medium transition-colors ${
+                    questionCount === count
+                      ? 'border-pink-400 bg-pink-50 shadow-md text-purple-700'
+                      : 'border-purple-100 bg-white/60 hover:border-purple-300 text-purple-700'
+                  }`}
+                >
+                  {count}
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          {isSingleMultOrDiv && (
+            <Card className="border border-purple-100/50 bg-white/80 shadow-lg backdrop-blur-sm rounded-3xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-bold text-purple-600">
+                  Тренировать конкретное число
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSpecificNumber(null)}
+                    className={`rounded-full border px-3 py-2 text-sm transition-colors ${
+                      specificNumber === null
+                        ? 'border-pink-400 bg-pink-50 shadow-md text-purple-700'
+                        : 'border-purple-100 bg-white/60 hover:border-purple-300 text-purple-700'
+                    }`}
+                  >
+                    Все
+                  </button>
+                  {SPECIFIC_NUMBERS.map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setSpecificNumber(n)}
+                      className={`rounded-full border px-3 py-2 text-sm transition-colors ${
+                        specificNumber === n
+                          ? 'border-pink-400 bg-pink-50 shadow-md text-purple-700'
+                          : 'border-purple-100 bg-white/60 hover:border-purple-300 text-purple-700'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="border border-purple-100/50 bg-white/80 shadow-lg backdrop-blur-sm rounded-3xl">
+            <CardContent className="flex items-center justify-between py-4">
+              <Label className="text-sm text-purple-600">Включить таймер</Label>
+              <Switch checked={timerEnabled} onCheckedChange={setTimerEnabled} />
+            </CardContent>
+          </Card>
+
+          <AnimatedButton
+            onClick={handleStart}
+            variant="primary"
+            size="lg"
+            pulse
+            className="w-full"
+          >
+            Начать! 🪄
+          </AnimatedButton>
+        </div>
+      </PageTransition>
     </div>
   )
 }

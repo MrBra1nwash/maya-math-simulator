@@ -9,13 +9,14 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { useAppStore } from '@/store/useAppStore'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { ACHIEVEMENTS } from '@/engine/achievements'
-import { cn } from '@/lib/utils'
 import { getOperationSymbol } from '@/engine/difficulty'
+import FloatingElements from '@/components/effects/FloatingElements'
+import PageTransition from '@/components/effects/PageTransition'
+import AnimatedButton from '@/components/effects/AnimatedButton'
 import type {
   SessionResult,
   Question,
@@ -123,27 +124,26 @@ export default function StatsPage() {
   const unlockedIds = new Set(profile.progress.achievements)
 
   const cardClass =
-    'border-amber-400/30 bg-indigo-950/80 text-white'
-  const tabsClass =
-    'border-amber-400/30 bg-indigo-950/80 text-white [&_[data-state=active]]:bg-amber-500/20 [&_[data-state=active]]:text-amber-300'
+    'bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-purple-100/50'
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-purple-900 via-indigo-900 to-blue-900 p-4">
-      <div className="w-full max-w-lg space-y-4 py-6">
+    <div className="relative flex min-h-screen flex-col items-center bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 p-4">
+      <FloatingElements count={10} />
+      <PageTransition>
+      <div className="relative z-10 w-full max-w-lg space-y-4 py-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-amber-300">Статистика</h1>
-          <Button
+          <h1 className="text-xl font-extrabold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Статистика</h1>
+          <AnimatedButton
             variant="ghost"
             size="sm"
             onClick={() => navigate('/home')}
-            className="text-indigo-400 hover:text-white"
           >
             Назад
-          </Button>
+          </AnimatedButton>
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className={cn(tabsClass, 'mb-4')}>
+          <TabsList className="mb-4 bg-white/80 backdrop-blur-sm border border-purple-100/50 rounded-2xl">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
             <TabsTrigger value="history">История</TabsTrigger>
             <TabsTrigger value="weak">Слабые места</TabsTrigger>
@@ -154,43 +154,43 @@ export default function StatsPage() {
             <div className="space-y-4">
               <Card className={cardClass}>
                 <CardHeader>
-                  <CardTitle className="text-base text-amber-300">Общая статистика</CardTitle>
+                  <CardTitle className="text-base font-bold text-purple-600">Общая статистика</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {history.length === 0 ? (
-                    <p className="py-4 text-center text-indigo-400">Пока нет данных</p>
+                    <p className="py-4 text-center text-purple-500">Пока нет данных</p>
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-indigo-300">Всего тренировок</span>
-                        <span className="font-bold text-white">{history.length}</span>
+                        <span className="text-gray-600">Всего тренировок</span>
+                        <span className="font-bold text-gray-800">{history.length}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-indigo-300">Звёзды</span>
-                        <span className="font-bold text-amber-300">
+                        <span className="text-gray-600">Звёзды</span>
+                        <span className="font-bold text-amber-500">
                           ⭐ {profile.progress.totalStars}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-indigo-300">Уровень</span>
-                        <span className="font-bold text-emerald-400">
+                        <span className="text-gray-600">Уровень</span>
+                        <span className="font-bold text-purple-600">
                           {profile.progress.level}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-indigo-300">Лучшая серия</span>
-                        <span className="font-bold text-orange-400">
+                        <span className="text-gray-600">Лучшая серия</span>
+                        <span className="font-bold text-pink-500">
                           🔥 {profile.progress.bestStreak}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-indigo-300">Средняя точность</span>
-                        <span className="font-bold text-white">{avgAccuracy}%</span>
+                        <span className="text-gray-600">Средняя точность</span>
+                        <span className="font-bold text-gray-800">{avgAccuracy}%</span>
                       </div>
                       {mostTrained && (
                         <div className="flex justify-between">
-                          <span className="text-indigo-300">Чаще всего тренировал</span>
-                          <span className="font-bold text-white">
+                          <span className="text-gray-600">Чаще всего тренировал</span>
+                          <span className="font-bold text-gray-800">
                             {OPERATION_ICONS[mostTrained]}{' '}
                             {mostTrained === 'addition'
                               ? 'Сложение'
@@ -209,45 +209,46 @@ export default function StatsPage() {
 
               <Card className={cardClass}>
                 <CardHeader>
-                  <CardTitle className="text-base text-amber-300">
+                  <CardTitle className="text-base font-bold text-purple-600">
                     Точность за последние 10 тренировок
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {chartData.length === 0 ? (
-                    <p className="py-8 text-center text-indigo-400">Пока нет данных</p>
+                    <p className="py-8 text-center text-purple-500">Пока нет данных</p>
                   ) : (
                     <div className="h-48 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(129, 140, 248, 0.3)" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(192, 132, 252, 0.2)" />
                           <XAxis
                             dataKey="name"
-                            stroke="#a5b4fc"
-                            tick={{ fill: '#a5b4fc', fontSize: 12 }}
+                            stroke="#c084fc"
+                            tick={{ fill: '#a78bfa', fontSize: 12 }}
                           />
                           <YAxis
-                            stroke="#a5b4fc"
-                            tick={{ fill: '#a5b4fc', fontSize: 12 }}
+                            stroke="#c084fc"
+                            tick={{ fill: '#a78bfa', fontSize: 12 }}
                             domain={[0, 100]}
                             tickFormatter={(v) => `${v}%`}
                           />
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: 'rgb(30 27 75 / 0.95)',
-                              border: '1px solid rgba(251, 191, 36, 0.3)',
-                              borderRadius: '8px',
-                              color: 'white',
+                              backgroundColor: 'white',
+                              border: '1px solid rgba(192, 132, 252, 0.3)',
+                              borderRadius: '12px',
+                              color: '#4c1d95',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                             }}
                             formatter={(value) => [`${value != null ? value : 0}%`, 'Точность']}
                           />
                           <Line
                             type="monotone"
                             dataKey="accuracy"
-                            stroke="#fbbf24"
-                            strokeWidth={2}
-                            dot={{ fill: '#fbbf24', r: 4 }}
-                            activeDot={{ r: 6 }}
+                            stroke="#c084fc"
+                            strokeWidth={3}
+                            dot={{ fill: '#a855f7', r: 5, strokeWidth: 2, stroke: 'white' }}
+                            activeDot={{ r: 7, fill: '#ec4899' }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -261,11 +262,11 @@ export default function StatsPage() {
           <TabsContent value="history">
             <Card className={cardClass}>
               <CardHeader>
-                <CardTitle className="text-base text-amber-300">Последние тренировки</CardTitle>
+                <CardTitle className="text-base font-bold text-purple-600">Последние тренировки</CardTitle>
               </CardHeader>
               <CardContent>
                 {recentHistory.length === 0 ? (
-                  <p className="py-8 text-center text-indigo-400">Пока нет данных</p>
+                  <p className="py-8 text-center text-purple-500">Пока нет данных</p>
                 ) : (
                   <ul className="space-y-3">
                     {recentHistory.map((s) => {
@@ -273,10 +274,10 @@ export default function StatsPage() {
                       return (
                         <li
                           key={s.id}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-400/20 bg-indigo-900/50 px-3 py-2"
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-purple-100 bg-purple-50/50 px-3 py-2"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-indigo-400">{formatDate(s.date)}</span>
+                            <span className="text-sm font-medium text-purple-600">{formatDate(s.date)}</span>
                             <div className="flex gap-1">
                               {s.config.operations.map((op) => (
                                 <span key={op} title={op}>
@@ -286,16 +287,16 @@ export default function StatsPage() {
                             </div>
                             <Badge
                               variant="outline"
-                              className="border-amber-400/40 bg-amber-500/10 text-amber-300"
+                              className="border-purple-200 bg-purple-100/50 text-purple-600"
                             >
                               {DIFFICULTY_LABELS[s.config.difficulty]}
                             </Badge>
                           </div>
                           <div className="text-right">
-                            <span className="font-bold text-white">
+                            <span className="font-bold text-gray-800">
                               {s.correctAnswers}/{s.totalQuestions}
                             </span>
-                            <span className="ml-1 text-indigo-400">({acc}%)</span>
+                            <span className="ml-1 text-purple-600">({acc}%)</span>
                           </div>
                         </li>
                       )
@@ -309,24 +310,24 @@ export default function StatsPage() {
           <TabsContent value="weak">
             <Card className={cardClass}>
               <CardHeader>
-                <CardTitle className="text-base text-amber-300">Топ-10 сложных примеров</CardTitle>
+                <CardTitle className="text-base font-bold text-purple-600">Топ-10 сложных примеров</CardTitle>
               </CardHeader>
               <CardContent>
                 {weakSpots.length === 0 ? (
-                  <p className="py-8 text-center text-indigo-400">Пока нет данных</p>
+                  <p className="py-8 text-center text-purple-500">Пока нет данных</p>
                 ) : (
                   <ul className="space-y-3">
                     {weakSpots.map(({ question, count }) => (
                       <li
                         key={questionKey(question)}
-                        className="flex items-center justify-between rounded-lg border border-amber-400/20 bg-indigo-900/50 px-3 py-2"
+                        className="flex items-center justify-between rounded-2xl border border-red-100 bg-red-50/50 px-3 py-2"
                       >
-                        <span className="font-mono text-lg font-bold text-white">
+                        <span className="font-mono text-lg font-bold text-gray-800">
                           {formatQuestion(question)}
                         </span>
                         <Badge
                           variant="outline"
-                          className="border-rose-400/40 bg-rose-500/20 text-rose-300"
+                          className="border-red-200 bg-red-100/50 text-red-500"
                         >
                           Ошибок: {count}
                         </Badge>
@@ -341,7 +342,7 @@ export default function StatsPage() {
           <TabsContent value="achievements">
             <Card className={cardClass}>
               <CardHeader>
-                <CardTitle className="text-base text-amber-300">Достижения</CardTitle>
+                <CardTitle className="text-base font-bold text-purple-600">Достижения</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
@@ -350,21 +351,21 @@ export default function StatsPage() {
                     return (
                       <li
                         key={a.id}
-                        className={`flex items-start gap-3 rounded-lg border px-3 py-2 ${
+                        className={`flex items-start gap-3 rounded-2xl border px-3 py-3 ${
                           unlocked
-                            ? 'border-amber-400/30 bg-amber-500/10'
-                            : 'border-indigo-800/50 bg-indigo-950/50 opacity-60'
+                            ? 'border-pink-200 bg-pink-50/80 shadow-sm'
+                            : 'border-purple-100 bg-gray-50/50 opacity-50'
                         }`}
                       >
                         <span className="text-2xl">{a.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-white">{a.name}</div>
-                          <div className="text-sm text-indigo-300">{a.description}</div>
+                          <div className="font-semibold text-gray-800">{a.name}</div>
+                          <div className="text-sm text-purple-600">{a.description}</div>
                         </div>
                         {unlocked && (
                           <Badge
                             variant="outline"
-                            className="shrink-0 border-amber-400/40 bg-amber-500/20 text-amber-300"
+                            className="shrink-0 border-pink-300 bg-pink-100 text-pink-600"
                           >
                             ✓
                           </Badge>
@@ -378,6 +379,7 @@ export default function StatsPage() {
           </TabsContent>
         </Tabs>
       </div>
+      </PageTransition>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import type { MascotMood } from '@/types'
 
 interface CapybaraMascotProps {
@@ -6,18 +6,18 @@ interface CapybaraMascotProps {
   size?: number
 }
 
-const moodConfig: Record<MascotMood, { emoji: string; label: string }> = {
-  idle: { emoji: '🧙', label: 'Капибара-маг думает...' },
-  thinking: { emoji: '🤔', label: 'Капибара думает...' },
-  happy: { emoji: '🎉', label: 'Капибара радуется!' },
-  sad: { emoji: '😢', label: 'Капибара грустит...' },
-  excited: { emoji: '🤩', label: 'Капибара в восторге!' },
-  dancing: { emoji: '💃', label: 'Капибара танцует!' },
+const moodConfig: Record<MascotMood, { label: string }> = {
+  idle: { label: '🐹 Капибара-маг ждёт...' },
+  thinking: { label: '🤔 Хм, думаю...' },
+  happy: { label: '🎉 Ура, правильно!' },
+  sad: { label: '💪 Попробуй ещё!' },
+  excited: { label: '🤩 Невероятно!' },
+  dancing: { label: '💃 Танцуем!' },
 }
 
 const moodAnimations: Record<MascotMood, object> = {
   idle: {
-    y: [0, -5, 0],
+    y: [0, -6, 0],
     transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
   },
   thinking: {
@@ -25,8 +25,8 @@ const moodAnimations: Record<MascotMood, object> = {
     transition: { repeat: Infinity, duration: 1.5, ease: 'easeInOut' },
   },
   happy: {
-    scale: [1, 1.2, 1],
-    y: [0, -15, 0],
+    scale: [1, 1.15, 1],
+    y: [0, -20, 0],
     transition: { repeat: 2, duration: 0.4, ease: 'easeOut' },
   },
   sad: {
@@ -36,11 +36,11 @@ const moodAnimations: Record<MascotMood, object> = {
   },
   excited: {
     scale: [1, 1.15, 1, 1.15, 1],
-    rotate: [0, -10, 10, -10, 0],
+    rotate: [0, -8, 8, -8, 0],
     transition: { repeat: 1, duration: 0.6, ease: 'easeOut' },
   },
   dancing: {
-    rotate: [0, -15, 15, -15, 15, 0],
+    rotate: [0, -12, 12, -12, 12, 0],
     y: [0, -10, 0, -10, 0],
     transition: { repeat: Infinity, duration: 1, ease: 'easeInOut' },
   },
@@ -51,119 +51,128 @@ export default function CapybaraMascot({ mood, size = 120 }: CapybaraMascotProps
   const animation = moodAnimations[mood]
 
   return (
-    <div className="flex flex-col items-center gap-1" role="img" aria-label={config.label}>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={mood}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1, ...animation }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          style={{ fontSize: size * 0.7, lineHeight: 1 }}
-          className="select-none"
-        >
-          <CapybaraSVG mood={mood} size={size} />
-        </motion.div>
-      </AnimatePresence>
-      <motion.span
-        key={`label-${mood}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-xs text-indigo-400"
+    <div className="flex flex-col items-center gap-2" role="img" aria-label={config.label}>
+      <motion.div
+        animate={animation}
+        className="select-none drop-shadow-lg"
       >
+        <KawaiiCapybaraSVG mood={mood} size={size} />
+      </motion.div>
+      <span className="text-xs font-medium text-purple-600">
         {config.label}
-      </motion.span>
+      </span>
     </div>
   )
 }
 
-function CapybaraSVG({ mood, size }: { mood: MascotMood; size: number }) {
-  const eyeVariant = mood === 'happy' || mood === 'excited' || mood === 'dancing'
-    ? 'happy'
-    : mood === 'sad'
-    ? 'sad'
-    : 'normal'
-
-  const hatColor = mood === 'excited' || mood === 'dancing' ? '#FFD700' : '#6B21A8'
+function KawaiiCapybaraSVG({ mood, size }: { mood: MascotMood; size: number }) {
+  const isHappy = mood === 'happy' || mood === 'excited' || mood === 'dancing'
+  const isSad = mood === 'sad'
+  const hatColor = isHappy ? '#FF6B9D' : '#7C5CFC'
+  const hatBand = isHappy ? '#FFB347' : '#C084FC'
+  const cheekColor = isHappy ? '#FF9EC6' : '#FFB5C5'
 
   return (
-    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={size} viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bodyGrad" cx="50%" cy="40%">
+          <stop offset="0%" stopColor="#F5D5B0" />
+          <stop offset="100%" stopColor="#D4A574" />
+        </radialGradient>
+        <radialGradient id="bellyGrad" cx="50%" cy="45%">
+          <stop offset="0%" stopColor="#FFF0DB" />
+          <stop offset="100%" stopColor="#F0D5A8" />
+        </radialGradient>
+        <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+          <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#00000015" />
+        </filter>
+      </defs>
+
       {/* wizard hat */}
-      <path d="M60 5 L45 40 L75 40 Z" fill={hatColor} stroke="#4C1D95" strokeWidth="1.5" />
-      <ellipse cx="60" cy="40" rx="20" ry="5" fill={hatColor} stroke="#4C1D95" strokeWidth="1.5" />
-      {/* hat star */}
-      <circle cx="58" cy="22" r="3" fill="#FDE68A" />
-
-      {/* body */}
-      <ellipse cx="60" cy="75" rx="30" ry="28" fill="#C4956A" />
-      <ellipse cx="60" cy="78" rx="24" ry="20" fill="#D4A574" />
-
-      {/* head */}
-      <ellipse cx="60" cy="55" rx="22" ry="18" fill="#C4956A" />
-      <ellipse cx="60" cy="58" rx="18" ry="13" fill="#D4A574" />
+      <path d="M70 8 L50 48 L90 48 Z" fill={hatColor} filter="url(#softShadow)" />
+      <ellipse cx="70" cy="48" rx="24" ry="6" fill={hatColor} />
+      <rect x="50" y="45" width="40" height="5" rx="2" fill={hatBand} />
+      <circle cx="68" cy="24" r="4" fill="#FDE68A" />
+      <circle cx="72" cy="18" r="2.5" fill="#FFF0A0" opacity="0.8" />
 
       {/* ears */}
-      <ellipse cx="42" cy="44" rx="6" ry="4" fill="#C4956A" transform="rotate(-20 42 44)" />
-      <ellipse cx="78" cy="44" rx="6" ry="4" fill="#C4956A" transform="rotate(20 78 44)" />
+      <ellipse cx="48" cy="50" rx="8" ry="5" fill="#D4A574" transform="rotate(-15 48 50)" />
+      <ellipse cx="48" cy="50" rx="5" ry="3" fill="#EDCBA0" transform="rotate(-15 48 50)" />
+      <ellipse cx="92" cy="50" rx="8" ry="5" fill="#D4A574" transform="rotate(15 92 50)" />
+      <ellipse cx="92" cy="50" rx="5" ry="3" fill="#EDCBA0" transform="rotate(15 92 50)" />
+
+      {/* body */}
+      <ellipse cx="70" cy="90" rx="35" ry="32" fill="url(#bodyGrad)" filter="url(#softShadow)" />
+      <ellipse cx="70" cy="94" rx="26" ry="22" fill="url(#bellyGrad)" />
+
+      {/* head */}
+      <ellipse cx="70" cy="65" rx="26" ry="20" fill="url(#bodyGrad)" />
+      <ellipse cx="70" cy="68" rx="20" ry="14" fill="url(#bellyGrad)" />
+
+      {/* cheeks */}
+      <ellipse cx="50" cy="68" rx="7" ry="5" fill={cheekColor} opacity="0.5" />
+      <ellipse cx="90" cy="68" rx="7" ry="5" fill={cheekColor} opacity="0.5" />
 
       {/* nose */}
-      <ellipse cx="60" cy="56" rx="5" ry="3" fill="#8B6914" />
+      <ellipse cx="70" cy="65" rx="6" ry="3.5" fill="#A07040" />
+      <ellipse cx="68" cy="64" rx="2" ry="1.2" fill="#C09060" />
 
       {/* eyes */}
-      {eyeVariant === 'happy' && (
+      {isHappy ? (
         <>
-          <path d="M50 50 Q53 47 56 50" stroke="#4C1D95" strokeWidth="2" fill="none" strokeLinecap="round" />
-          <path d="M64 50 Q67 47 70 50" stroke="#4C1D95" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M58 58 Q62 54 66 58" stroke="#4C1D95" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          <path d="M74 58 Q78 54 82 58" stroke="#4C1D95" strokeWidth="2.5" fill="none" strokeLinecap="round" />
         </>
-      )}
-      {eyeVariant === 'sad' && (
+      ) : isSad ? (
         <>
-          <circle cx="52" cy="49" r="2.5" fill="#4C1D95" />
-          <circle cx="68" cy="49" r="2.5" fill="#4C1D95" />
-          <path d="M50 47 Q52 49 54 47" stroke="#4C1D95" strokeWidth="1" fill="none" />
-          <path d="M66 47 Q68 49 70 47" stroke="#4C1D95" strokeWidth="1" fill="none" />
-          {/* tear */}
-          <circle cx="54" cy="53" r="1.5" fill="#93C5FD" opacity="0.8" />
+          <circle cx="60" cy="57" r="3.5" fill="#4C1D95" />
+          <circle cx="80" cy="57" r="3.5" fill="#4C1D95" />
+          <circle cx="61" cy="55.5" r="1.2" fill="white" />
+          <circle cx="81" cy="55.5" r="1.2" fill="white" />
+          <path d="M57 55 Q59 57 63 55" stroke="#4C1D95" strokeWidth="1" fill="none" />
+          <path d="M77 55 Q79 57 83 55" stroke="#4C1D95" strokeWidth="1" fill="none" />
+          <ellipse cx="65" cy="62" rx="2" ry="2.5" fill="#93C5FD" opacity="0.6" />
         </>
-      )}
-      {eyeVariant === 'normal' && (
+      ) : (
         <>
-          <circle cx="52" cy="49" r="2.5" fill="#4C1D95" />
-          <circle cx="68" cy="49" r="2.5" fill="#4C1D95" />
-          <circle cx="53" cy="48" r="0.8" fill="white" />
-          <circle cx="69" cy="48" r="0.8" fill="white" />
+          <circle cx="60" cy="57" r="3.5" fill="#4C1D95" />
+          <circle cx="80" cy="57" r="3.5" fill="#4C1D95" />
+          <circle cx="61.5" cy="55.5" r="1.5" fill="white" />
+          <circle cx="81.5" cy="55.5" r="1.5" fill="white" />
         </>
       )}
 
       {/* mouth */}
-      {(mood === 'happy' || mood === 'excited' || mood === 'dancing') ? (
-        <path d="M54 61 Q60 66 66 61" stroke="#8B6914" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      ) : mood === 'sad' ? (
-        <path d="M55 63 Q60 60 65 63" stroke="#8B6914" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      {isHappy ? (
+        <path d="M62 71 Q70 78 78 71" stroke="#A07040" strokeWidth="2" fill="none" strokeLinecap="round" />
+      ) : isSad ? (
+        <path d="M64 73 Q70 70 76 73" stroke="#A07040" strokeWidth="2" fill="none" strokeLinecap="round" />
       ) : (
-        <path d="M55 62 L65 62" stroke="#8B6914" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M64 72 Q70 74 76 72" stroke="#A07040" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       )}
 
       {/* whiskers */}
-      <line x1="38" y1="55" x2="48" y2="56" stroke="#8B6914" strokeWidth="0.8" />
-      <line x1="38" y1="58" x2="48" y2="58" stroke="#8B6914" strokeWidth="0.8" />
-      <line x1="72" y1="56" x2="82" y2="55" stroke="#8B6914" strokeWidth="0.8" />
-      <line x1="72" y1="58" x2="82" y2="58" stroke="#8B6914" strokeWidth="0.8" />
+      <line x1="42" y1="64" x2="54" y2="66" stroke="#C09060" strokeWidth="0.8" opacity="0.6" />
+      <line x1="42" y1="68" x2="54" y2="68" stroke="#C09060" strokeWidth="0.8" opacity="0.6" />
+      <line x1="86" y1="66" x2="98" y2="64" stroke="#C09060" strokeWidth="0.8" opacity="0.6" />
+      <line x1="86" y1="68" x2="98" y2="68" stroke="#C09060" strokeWidth="0.8" opacity="0.6" />
 
-      {/* wand (for wizard) */}
-      <line x1="85" y1="65" x2="100" y2="45" stroke="#8B5E3C" strokeWidth="2.5" strokeLinecap="round" />
-      <circle cx="100" cy="43" r="4" fill="#FDE68A" />
-      {mood === 'happy' || mood === 'excited' ? (
+      {/* wand */}
+      <line x1="100" y1="80" x2="118" y2="55" stroke="#8B5E3C" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="120" cy="52" r="5" fill="#FFB347" />
+      <circle cx="120" cy="52" r="3" fill="#FDE68A" />
+      {isHappy && (
         <>
-          <circle cx="95" cy="38" r="1.5" fill="#FDE68A" opacity="0.7" />
-          <circle cx="105" cy="40" r="1" fill="#FDE68A" opacity="0.5" />
-          <circle cx="98" cy="35" r="1" fill="#FDE68A" opacity="0.6" />
+          <circle cx="114" cy="46" r="2" fill="#FF6B9D" opacity="0.7" />
+          <circle cx="126" cy="48" r="1.5" fill="#7C5CFC" opacity="0.6" />
+          <circle cx="118" cy="42" r="1.5" fill="#FFB347" opacity="0.7" />
+          <circle cx="124" cy="42" r="1" fill="#4ECDC4" opacity="0.5" />
         </>
-      ) : null}
+      )}
 
       {/* feet */}
-      <ellipse cx="48" cy="100" rx="8" ry="4" fill="#A0764A" />
-      <ellipse cx="72" cy="100" rx="8" ry="4" fill="#A0764A" />
+      <ellipse cx="55" cy="118" rx="10" ry="5" fill="#C4956A" />
+      <ellipse cx="85" cy="118" rx="10" ry="5" fill="#C4956A" />
     </svg>
   )
 }

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import FloatingElements from '@/components/effects/FloatingElements'
+import PageTransition from '@/components/effects/PageTransition'
+import AnimatedButton from '@/components/effects/AnimatedButton'
 import CapybaraMascot from '@/components/Mascot/CapybaraMascot'
+import SwimmingPenguins from '@/components/effects/SwimmingPenguins'
 
 export default function LoginPage() {
   const [name, setName] = useState('')
@@ -23,62 +25,66 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-purple-900 via-indigo-900 to-blue-900 p-4">
-      <Card className="w-full max-w-md border-amber-400/30 bg-indigo-950/80 text-white shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="mb-2">
-            <CapybaraMascot mood="idle" size={100} />
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50 p-4">
+      <FloatingElements />
+      <SwimmingPenguins count={8} />
+      <PageTransition>
+        <div className="relative z-10 flex w-full max-w-md flex-col items-center">
+          <div className="mb-4 flex justify-center">
+            <CapybaraMascot mood="idle" size={140} />
           </div>
-          <CardTitle className="text-2xl font-bold text-amber-300">
-            Школа Магии Математики
-          </CardTitle>
-          <p className="text-indigo-300">Как тебя зовут, юный маг?</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleLogin(name)
-            }}
-            className="flex gap-2"
-          >
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Введи своё имя..."
-              className="border-indigo-600 bg-indigo-900/50 text-white placeholder:text-indigo-400"
-              autoFocus
-            />
-            <Button
-              type="submit"
-              disabled={!name.trim() || isLoading}
-              className="bg-amber-500 text-indigo-950 hover:bg-amber-400"
+          <div className="w-full rounded-3xl border border-purple-100/50 bg-white/80 p-8 shadow-xl backdrop-blur-sm">
+            <h1 className="mb-2 text-center text-3xl font-extrabold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+              Школа Магии Математики
+            </h1>
+            <p className="mb-1 text-center text-purple-600">
+              Как тебя зовут, юный маг?
+            </p>
+            <p className="mb-6 text-center text-2xl">🐹🪄✨</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleLogin(name)
+              }}
+              className="flex gap-2"
             >
-              Войти
-            </Button>
-          </form>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Введи своё имя..."
+                className="h-12 flex-1 rounded-2xl border-purple-200 bg-white/90 text-gray-700 placeholder:text-purple-300 focus:border-pink-400 focus:ring-pink-200"
+                autoFocus
+              />
+              <AnimatedButton
+                type="submit"
+                variant="primary"
+                disabled={!name.trim() || isLoading}
+              >
+                Войти
+              </AnimatedButton>
+            </form>
 
-          {profiles.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm text-indigo-400">Или выбери свой профиль:</p>
-              <div className="flex flex-wrap gap-2">
-                {profiles.map((p) => (
-                  <Button
-                    key={p}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleLogin(p)}
-                    disabled={isLoading}
-                    className="border-indigo-600 text-indigo-200 hover:bg-indigo-800 hover:text-white"
-                  >
-                    {p}
-                  </Button>
-                ))}
+            {profiles.length > 0 && (
+              <div className="mt-6 space-y-2">
+                <p className="text-sm text-purple-600">Или выбери свой профиль:</p>
+                <div className="flex flex-wrap gap-2">
+                  {profiles.map((p) => (
+                    <AnimatedButton
+                      key={p}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleLogin(p)}
+                      disabled={isLoading}
+                    >
+                      {p}
+                    </AnimatedButton>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </div>
+        </div>
+      </PageTransition>
     </div>
   )
 }

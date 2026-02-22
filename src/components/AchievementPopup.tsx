@@ -52,7 +52,7 @@ export default function AchievementPopup({ achievementIds, onDone }: Achievement
           <div>
             <div className="text-xs font-medium text-amber-400">Новое достижение!</div>
             <div className="font-bold text-white">{achievement.name}</div>
-            <div className="text-xs text-indigo-400">{achievement.description}</div>
+            <div className="text-xs text-purple-300">{achievement.description}</div>
           </div>
         </div>
       </motion.div>

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAppStore } from '@/store/useAppStore'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { generateChoices } from '@/engine/choicesGenerator'
@@ -10,6 +9,10 @@ import { validateAnswer } from '@/engine/validator'
 import { getOperationSymbol } from '@/engine/difficulty'
 import CapybaraMascot from '@/components/Mascot/CapybaraMascot'
 import { useSounds } from '@/sounds/useSounds'
+import FloatingElements from '@/components/effects/FloatingElements'
+import PageTransition from '@/components/effects/PageTransition'
+import AnimatedButton from '@/components/effects/AnimatedButton'
+import CelebrationEffect from '@/components/effects/CelebrationEffect'
 import type { SessionResult, MistakeRecord } from '@/types'
 
 type AnswerState = 'answering' | 'correct' | 'wrong_first' | 'wrong_final'
@@ -32,6 +35,7 @@ export default function TrainingPage() {
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
   const [sessionStreak, setSessionStreak] = useState(0)
   const [timer, setTimer] = useState(0)
+  const [pendingWrongAnswer, setPendingWrongAnswer] = useState<number | null>(null)
   const isEndingRef = useRef(false)
 
   const inputMode = profile?.settings.inputMode ?? 'choices'
@@ -47,7 +51,8 @@ export default function TrainingPage() {
 
   useEffect(() => {
     if (currentQuestion) {
-      setChoices(generateChoices(currentQuestion.correctAnswer, currentQuestion.difficulty))
+      const allowNegative = profile?.settings.negativeNumbers ?? false
+      setChoices(generateChoices(currentQuestion.correctAnswer, currentQuestion.difficulty, allowNegative))
       setInputValue('')
       setSelectedChoice(null)
       setAnswerState('answering')
@@ -111,7 +116,8 @@ export default function TrainingPage() {
     const isCorrect = validateAnswer(currentQuestion, userAnswer)
 
     if (isCorrect) {
-      setAnswerState('correct')
+      const timerMode = currentSession.config.timerEnabled
+      if (!timerMode) setAnswerState('correct')
       setMascotMood('happy')
       const newStreak = sessionStreak + 1
       setSessionStreak(newStreak)
@@ -120,15 +126,14 @@ export default function TrainingPage() {
       } else {
         sounds.playCorrect()
       }
-      answerQuestion(userAnswer, true, false)
 
+      const delay = timerMode ? 300 : 1500
       setTimeout(() => {
+        answerQuestion(userAnswer, true, false)
         if (currentSession.currentIndex + 1 >= currentSession.config.questionCount) {
           finishSession()
-        } else {
-          setAnswerState('answering')
         }
-      }, 1000)
+      }, delay)
     } else if (answerState === 'answering') {
       setAnswerState('wrong_first')
       setMascotMood('sad')
@@ -140,15 +145,7 @@ export default function TrainingPage() {
       setMascotMood('sad')
       sounds.playWrong()
       setSessionStreak(0)
-      answerQuestion(userAnswer, false, true)
-
-      setTimeout(() => {
-        if (currentSession.currentIndex + 1 >= currentSession.config.questionCount) {
-          finishSession()
-        } else {
-          setAnswerState('answering')
-        }
-      }, 2000)
+      setPendingWrongAnswer(userAnswer)
     }
   }, [currentQuestion, currentSession, answerState, answerQuestion, setMascotMood, finishSession])
 
@@ -165,6 +162,15 @@ export default function TrainingPage() {
     processAnswer(value)
   }
 
+  const handleNextAfterWrong = useCallback(() => {
+    if (!currentSession || pendingWrongAnswer === null) return
+    answerQuestion(pendingWrongAnswer, false, true)
+    setPendingWrongAnswer(null)
+    if (currentSession.currentIndex + 1 >= currentSession.config.questionCount) {
+      finishSession()
+    }
+  }, [currentSession, pendingWrongAnswer, answerQuestion, finishSession])
+
   if (!currentSession || !currentQuestion) return null
 
   const progressPercent = (currentSession.currentIndex / currentSession.config.questionCount) * 100
@@ -179,128 +185,154 @@ export default function TrainingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-purple-900 via-indigo-900 to-blue-900 p-4">
-      <div className="w-full max-w-lg space-y-4 py-4">
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-indigo-300">
-            <span>
-              Вопрос {currentSession.currentIndex + 1} из{' '}
-              {currentSession.config.questionCount}
-            </span>
-            <div className="flex gap-3">
-              {sessionStreak > 0 && <span className="text-orange-400">🔥 {sessionStreak}</span>}
-              {currentSession.config.timerEnabled && (
-                <span>⏱ {formatTimer(timer)}</span>
-              )}
-            </div>
-          </div>
-          <Progress value={progressPercent} className="h-3" />
-        </div>
-
-        <div className="flex justify-center py-2">
-          <CapybaraMascot mood={mascotMood} size={100} />
-        </div>
-
-        <Card className="border-amber-400/30 bg-indigo-950/80 text-white">
-          <CardContent className="py-8">
-            <div className="text-center">
-              <div className="mb-2 text-lg text-indigo-400">
-                {getOperationSymbol(currentQuestion.operation) === '+' && 'Сложение'}
-                {getOperationSymbol(currentQuestion.operation) === '−' && 'Вычитание'}
-                {getOperationSymbol(currentQuestion.operation) === '×' && 'Умножение'}
-                {getOperationSymbol(currentQuestion.operation) === '÷' && 'Деление'}
+    <div className="relative min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-blue-50">
+      <FloatingElements count={8} />
+      <CelebrationEffect active={answerState === 'correct'} streak={sessionStreak} />
+      <PageTransition>
+        <div className="relative z-10 flex min-h-screen flex-col items-center p-4">
+          <div className="w-full max-w-lg space-y-4 py-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm font-medium text-purple-700">
+                <span>
+                  Вопрос {currentSession.currentIndex + 1} из{' '}
+                  {currentSession.config.questionCount}
+                </span>
+                <div className="flex gap-3">
+                  {sessionStreak > 0 && <span className="font-bold text-pink-600">🔥 {sessionStreak}</span>}
+                  {currentSession.config.timerEnabled && (
+                    <span>⏱ {formatTimer(timer)}</span>
+                  )}
+                </div>
               </div>
-              <div className="text-4xl font-bold tracking-wider text-white md:text-5xl">
-                {currentQuestion.operand1} {getOperationSymbol(currentQuestion.operation)}{' '}
-                {currentQuestion.operand2} = ?
-              </div>
+              <Progress value={progressPercent} className="h-3" />
             </div>
-          </CardContent>
-        </Card>
 
-        {answerState === 'wrong_first' && (
-          <div className="rounded-lg bg-orange-500/20 p-3 text-center text-orange-300">
-            Не совсем! Попробуй ещё раз 💪
-          </div>
-        )}
+            <div className="flex justify-center py-2">
+              <CapybaraMascot mood={mascotMood} size={100} />
+            </div>
 
-        {answerState === 'wrong_final' && (
-          <div className="rounded-lg bg-red-500/20 p-3 text-center text-red-300">
-            Правильный ответ: <span className="text-xl font-bold">{currentQuestion.correctAnswer}</span>
-          </div>
-        )}
-
-        {answerState === 'correct' && (
-          <div className="rounded-lg bg-emerald-500/20 p-3 text-center text-emerald-300">
-            Правильно! ⭐
-          </div>
-        )}
-
-        {inputMode === 'keyboard' ? (
-          <form onSubmit={handleKeyboardSubmit} className="space-y-3">
-            <Input
-              type="number"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Введи ответ..."
-              className="h-14 border-indigo-600 bg-indigo-900/50 text-center text-2xl text-white placeholder:text-indigo-500"
-              autoFocus
-              disabled={answerState === 'correct' || answerState === 'wrong_final'}
-            />
-            <Button
-              type="submit"
-              className="h-12 w-full bg-amber-500 text-lg font-bold text-indigo-950 hover:bg-amber-400"
-              disabled={!inputValue.trim() || answerState === 'correct' || answerState === 'wrong_final'}
+            <motion.div
+              className="overflow-hidden rounded-3xl border border-purple-100/50 bg-white/80 p-8 shadow-xl backdrop-blur-sm"
+              animate={
+                answerState === 'wrong_first' || answerState === 'wrong_final'
+                  ? { x: [0, -10, 10, -10, 10, 0] }
+                  : { x: 0 }
+              }
+              transition={{ duration: 0.4 }}
             >
-              Ответить
-            </Button>
-          </form>
-        ) : (
-          <div className={`grid gap-3 ${choices.length <= 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {choices.map((value) => {
-              let variant: 'default' | 'outline' = 'outline'
-              let extraClass = 'border-indigo-600 text-indigo-200 hover:bg-indigo-800 hover:text-white'
+              <div className="text-center">
+                <div className="mb-2 text-lg font-medium text-purple-600">
+                  {getOperationSymbol(currentQuestion.operation) === '+' && 'Сложение'}
+                  {getOperationSymbol(currentQuestion.operation) === '−' && 'Вычитание'}
+                  {getOperationSymbol(currentQuestion.operation) === '×' && 'Умножение'}
+                  {getOperationSymbol(currentQuestion.operation) === '÷' && 'Деление'}
+                </div>
+                <div className="text-4xl font-extrabold text-gray-800">
+                  {currentQuestion.operand1} {getOperationSymbol(currentQuestion.operation)}{' '}
+                  {currentQuestion.operand2} = ?
+                </div>
+              </div>
+            </motion.div>
 
-              if (selectedChoice === value) {
-                if (answerState === 'correct') {
-                  extraClass = 'border-emerald-400 bg-emerald-500/20 text-emerald-300'
-                } else if (answerState === 'wrong_first' || answerState === 'wrong_final') {
-                  extraClass = 'border-red-400 bg-red-500/20 text-red-300'
-                }
-              }
+            {answerState === 'wrong_first' && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center text-amber-600">
+                Не совсем! Попробуй ещё раз 💪
+              </div>
+            )}
 
-              if (answerState === 'wrong_final' && value === currentQuestion.correctAnswer) {
-                extraClass = 'border-emerald-400 bg-emerald-500/20 text-emerald-300'
-              }
-
-              return (
-                <Button
-                  key={value}
-                  variant={variant}
-                  onClick={() => handleChoiceClick(value)}
-                  disabled={answerState === 'correct' || answerState === 'wrong_final'}
-                  className={`h-14 text-xl font-bold ${extraClass}`}
+            {answerState === 'wrong_final' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-3 rounded-3xl border border-purple-200 bg-white/90 p-6 text-center shadow-lg backdrop-blur-sm"
+              >
+                <p className="text-purple-600">
+                  Ничего страшного, это был сложный пример!
+                </p>
+                <p className="text-purple-700">
+                  Правильный ответ: <span className="text-3xl font-extrabold text-pink-500">{currentQuestion.correctAnswer}</span>
+                </p>
+                <p className="text-sm text-purple-500">
+                  Постарайся запомнить, в следующий раз у тебя всё получится! 💪✨
+                </p>
+                <AnimatedButton
+                  variant="primary"
+                  className="mt-2 w-full"
+                  onClick={handleNextAfterWrong}
                 >
-                  {value}
-                </Button>
-              )
-            })}
-          </div>
-        )}
+                  Я запомню! 🚀
+                </AnimatedButton>
+              </motion.div>
+            )}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            isEndingRef.current = true
-            endSession()
-            navigate('/home')
-          }}
-          className="w-full text-indigo-500 hover:text-indigo-300"
-        >
-          Закончить тренировку
-        </Button>
-      </div>
+            {inputMode === 'keyboard' ? (
+              <form onSubmit={handleKeyboardSubmit} className="space-y-3">
+                <Input
+                  type="number"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="Введи ответ..."
+                  className="h-14 rounded-2xl border-2 border-purple-200 bg-white/80 text-center text-2xl text-gray-800 placeholder:text-purple-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
+                  autoFocus
+                  disabled={answerState === 'correct' || answerState === 'wrong_final'}
+                />
+                <AnimatedButton
+                  type="submit"
+                  variant="primary"
+                  className="h-12 w-full text-lg font-bold"
+                  disabled={!inputValue.trim() || answerState === 'correct' || answerState === 'wrong_final'}
+                >
+                  Ответить
+                </AnimatedButton>
+              </form>
+            ) : (
+              <div className={`grid gap-3 ${choices.length <= 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {choices.map((value) => {
+                  let extraClass = ''
+
+                  if (selectedChoice === value) {
+                    if (answerState === 'correct') {
+                      extraClass = 'border-green-400 bg-green-100 text-green-700'
+                    } else if (answerState === 'wrong_first' || answerState === 'wrong_final') {
+                      extraClass = 'border-red-400 bg-red-100 text-red-500'
+                    }
+                  }
+
+                  if (answerState === 'wrong_final' && value === currentQuestion.correctAnswer) {
+                    extraClass = 'border-green-400 bg-green-100 text-green-700'
+                  }
+
+                  return (
+                    <AnimatedButton
+                      key={value}
+                      variant="outline"
+                      size="lg"
+                      onClick={() => handleChoiceClick(value)}
+                      disabled={answerState === 'correct' || answerState === 'wrong_final'}
+                      className={`h-16 text-2xl ${extraClass}`}
+                    >
+                      {value}
+                    </AnimatedButton>
+                  )
+                })}
+              </div>
+            )}
+
+            <AnimatedButton
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                isEndingRef.current = true
+                endSession()
+                navigate('/home')
+              }}
+              className="w-full"
+            >
+              Закончить тренировку
+            </AnimatedButton>
+          </div>
+        </div>
+      </PageTransition>
     </div>
   )
 }

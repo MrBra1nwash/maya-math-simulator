@@ -33,7 +33,7 @@ test.describe('Settings page', () => {
     await login(page, 'Тест')
     await goToSettings(page)
     const choicesButton = page.getByRole('button', { name: /Варианты ответов/ })
-    await expect(choicesButton).toHaveClass(/border-amber-400/)
+    await expect(choicesButton).toHaveClass(/border-pink-400/)
   })
 
   test('should switch to keyboard input mode', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe('Settings page', () => {
     await goToSettings(page)
     await page.getByRole('button', { name: /Клавиатура/ }).click()
     const keyboardButton = page.getByRole('button', { name: /Клавиатура/ })
-    await expect(keyboardButton).toHaveClass(/border-amber-400/)
+    await expect(keyboardButton).toHaveClass(/border-pink-400/)
   })
 
   test('should toggle negative numbers', async ({ page }) => {
@@ -71,7 +71,7 @@ test.describe('Settings page', () => {
     await login(page, 'ПерсТест', false)
     await goToSettings(page)
     const keyboardButton = page.getByRole('button', { name: /Клавиатура/ })
-    await expect(keyboardButton).toHaveClass(/border-amber-400/)
+    await expect(keyboardButton).toHaveClass(/border-pink-400/)
     const negativeSwitchAfter = page
       .getByText('Отрицательные числа')
       .locator('..')
