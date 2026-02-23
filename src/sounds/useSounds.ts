@@ -1,14 +1,36 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 
 let ctx: AudioContext | null = null
+let unlocked = false
 
-async function getCtx(): Promise<AudioContext | null> {
+function unlockAudio() {
   try {
     if (!ctx || ctx.state === 'closed') {
       ctx = new AudioContext()
     }
     if (ctx.state === 'suspended') {
-      await ctx.resume()
+      ctx.resume()
+    }
+    if (!unlocked && ctx.state === 'running') {
+      const silent = ctx.createBuffer(1, 1, ctx.sampleRate)
+      const src = ctx.createBufferSource()
+      src.buffer = silent
+      src.connect(ctx.destination)
+      src.start()
+      unlocked = true
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function getCtx(): AudioContext | null {
+  try {
+    if (!ctx || ctx.state === 'closed') {
+      ctx = new AudioContext()
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume()
     }
     return ctx
   } catch {
@@ -127,9 +149,10 @@ function clickSound(ac: AudioContext) {
   tone(ac, 1200, t, 0.04, 0.1, 'sine')
 }
 
-async function play(fn: (ac: AudioContext) => void) {
+function play(fn: (ac: AudioContext) => void) {
   try {
-    const ac = await getCtx()
+    unlockAudio()
+    const ac = getCtx()
     if (ac) fn(ac)
   } catch {
     // silently ignore audio errors
@@ -141,6 +164,17 @@ export interface UseSoundsOptions {
 }
 
 export function useSounds({ enabled }: UseSoundsOptions) {
+  useEffect(() => {
+    if (!enabled) return
+    const handler = () => unlockAudio()
+    document.addEventListener('touchstart', handler, { once: true })
+    document.addEventListener('click', handler, { once: true })
+    return () => {
+      document.removeEventListener('touchstart', handler)
+      document.removeEventListener('click', handler)
+    }
+  }, [enabled])
+
   const playCorrect = useCallback(() => { if (enabled) play(correctSound) }, [enabled])
   const playWrong = useCallback(() => { if (enabled) play(wrongSound) }, [enabled])
   const playStreak = useCallback(() => { if (enabled) play(streakSound) }, [enabled])
