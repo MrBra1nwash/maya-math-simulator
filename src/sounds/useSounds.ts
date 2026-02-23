@@ -37,30 +37,6 @@ function tone(
   osc.stop(start + dur)
 }
 
-function slideTone(
-  ac: AudioContext,
-  freqStart: number,
-  freqEnd: number,
-  start: number,
-  dur: number,
-  vol: number,
-  type: OscillatorType = 'sine',
-) {
-  const osc = ac.createOscillator()
-  const gain = ac.createGain()
-  osc.connect(gain)
-  gain.connect(ac.destination)
-  osc.type = type
-  osc.frequency.setValueAtTime(freqStart, start)
-  osc.frequency.linearRampToValueAtTime(freqEnd, start + dur)
-  gain.gain.setValueAtTime(0, start)
-  gain.gain.linearRampToValueAtTime(vol, start + 0.02)
-  gain.gain.setValueAtTime(vol, start + dur * 0.6)
-  gain.gain.linearRampToValueAtTime(0, start + dur)
-  osc.start(start)
-  osc.stop(start + dur)
-}
-
 function correctSound(ac: AudioContext) {
   const t = ac.currentTime
   tone(ac, 523.25, t, 0.15, 0.25, 'triangle')

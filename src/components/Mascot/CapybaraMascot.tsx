@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, type TargetAndTransition } from 'framer-motion'
 import type { MascotMood } from '@/types'
 
 interface CapybaraMascotProps {
@@ -15,7 +15,7 @@ const moodConfig: Record<MascotMood, { label: string }> = {
   dancing: { label: '💃 Танцуем!' },
 }
 
-const moodAnimations: Record<MascotMood, object> = {
+const moodAnimations: Record<MascotMood, TargetAndTransition> = {
   idle: {
     y: [0, -6, 0],
     transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
