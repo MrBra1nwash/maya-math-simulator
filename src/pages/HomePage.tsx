@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import FloatingElements from '@/components/effects/FloatingElements'
 import PageTransition from '@/components/effects/PageTransition'
 import AnimatedButton from '@/components/effects/AnimatedButton'
-import CapybaraMascot from '@/components/Mascot/CapybaraMascot'
+import LottieMascot from '@/components/Mascot/LottieMascot'
 import SwimmingPenguins from '@/components/effects/SwimmingPenguins'
 import { getLevelName, getStarsForNextLevel, getAchievementDef } from '@/engine/achievements'
 
@@ -107,12 +107,7 @@ export default function HomePage() {
           </Card>
 
           <div className="flex justify-center py-2">
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <CapybaraMascot mood="idle" size={140} />
-            </motion.div>
+            <LottieMascot src="/lottie/turtle.json" size={140} />
           </div>
 
           <div className="space-y-3">

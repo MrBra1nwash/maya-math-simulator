@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { generateChoices } from '@/engine/choicesGenerator'
 import { validateAnswer } from '@/engine/validator'
 import { getOperationSymbol } from '@/engine/difficulty'
-import CapybaraMascot from '@/components/Mascot/CapybaraMascot'
+import LottieMascot from '@/components/Mascot/LottieMascot'
 import { useSounds } from '@/sounds/useSounds'
 import FloatingElements from '@/components/effects/FloatingElements'
 import PageTransition from '@/components/effects/PageTransition'
@@ -207,8 +207,10 @@ export default function TrainingPage() {
               <Progress value={progressPercent} className="h-3" />
             </div>
 
-            <div className="flex justify-center py-2">
-              <CapybaraMascot mood={mascotMood} size={100} />
+            <div className="flex items-center justify-center gap-2 py-2">
+              <LottieMascot src="/lottie/bear-happy.json" size={80} />
+              <LottieMascot src="/lottie/hearts.json" size={80} />
+              <LottieMascot src="/lottie/teddy.json" size={80} />
             </div>
 
             <motion.div

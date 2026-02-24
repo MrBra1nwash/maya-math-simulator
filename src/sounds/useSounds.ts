@@ -3,6 +3,9 @@ import { useCallback, useEffect, useMemo } from 'react'
 let ctx: AudioContext | null = null
 let unlocked = false
 
+const CORRECT_PHRASES = ['/sounds/correct-1.m4a', '/sounds/correct-2.m4a', '/sounds/correct-3.m4a']
+const phraseCache = new Map<string, AudioBuffer>()
+
 function unlockAudio() {
   try {
     if (!ctx || ctx.state === 'closed') {
@@ -38,32 +41,36 @@ function getCtx(): AudioContext | null {
   }
 }
 
-function tone(
-  ac: AudioContext,
-  freq: number,
-  start: number,
-  dur: number,
-  vol: number,
-  type: OscillatorType = 'sine',
-) {
-  const osc = ac.createOscillator()
-  const gain = ac.createGain()
-  osc.connect(gain)
-  gain.connect(ac.destination)
-  osc.frequency.value = freq
-  osc.type = type
-  gain.gain.setValueAtTime(0, start)
-  gain.gain.linearRampToValueAtTime(vol, start + 0.01)
-  gain.gain.linearRampToValueAtTime(0, start + dur)
-  osc.start(start)
-  osc.stop(start + dur)
+async function playCorrectPhrase(ac: AudioContext) {
+  const url = CORRECT_PHRASES[Math.floor(Math.random() * CORRECT_PHRASES.length)]
+
+  let buffer = phraseCache.get(url)
+  if (!buffer) {
+    try {
+      const response = await fetch(url)
+      const arrayBuffer = await response.arrayBuffer()
+      buffer = await ac.decodeAudioData(arrayBuffer)
+      phraseCache.set(url, buffer)
+    } catch {
+      return
+    }
+  }
+
+  const source = ac.createBufferSource()
+  source.buffer = buffer
+  source.connect(ac.destination)
+  source.start()
 }
 
-function correctSound(ac: AudioContext) {
-  const t = ac.currentTime
-  tone(ac, 523.25, t, 0.15, 0.25, 'triangle')
-  tone(ac, 659.25, t + 0.1, 0.15, 0.25, 'triangle')
-  tone(ac, 783.99, t + 0.2, 0.2, 0.3, 'triangle')
+function preloadPhrases(ac: AudioContext) {
+  for (const url of CORRECT_PHRASES) {
+    if (phraseCache.has(url)) continue
+    fetch(url)
+      .then((r) => r.arrayBuffer())
+      .then((buf) => ac.decodeAudioData(buf))
+      .then((decoded) => phraseCache.set(url, decoded))
+      .catch(() => {})
+  }
 }
 
 function wrongSound(ac: AudioContext) {
@@ -127,28 +134,6 @@ function wrongSound(ac: AudioContext) {
   motorboat.stop(t + dur)
 }
 
-function streakSound(ac: AudioContext) {
-  const t = ac.currentTime
-  tone(ac, 523.25, t, 0.1, 0.2, 'triangle')
-  tone(ac, 659.25, t + 0.08, 0.1, 0.2, 'triangle')
-  tone(ac, 783.99, t + 0.16, 0.1, 0.22, 'triangle')
-  tone(ac, 1046.5, t + 0.24, 0.2, 0.25, 'triangle')
-}
-
-function completeSound(ac: AudioContext) {
-  const t = ac.currentTime
-  tone(ac, 523.25, t, 0.12, 0.2, 'triangle')
-  tone(ac, 659.25, t + 0.1, 0.12, 0.2, 'triangle')
-  tone(ac, 783.99, t + 0.2, 0.12, 0.22, 'triangle')
-  tone(ac, 1046.5, t + 0.3, 0.25, 0.25, 'triangle')
-  tone(ac, 1318.5, t + 0.45, 0.3, 0.2, 'triangle')
-}
-
-function clickSound(ac: AudioContext) {
-  const t = ac.currentTime
-  tone(ac, 1200, t, 0.04, 0.1, 'sine')
-}
-
 function play(fn: (ac: AudioContext) => void) {
   try {
     unlockAudio()
@@ -159,6 +144,8 @@ function play(fn: (ac: AudioContext) => void) {
   }
 }
 
+const noop = () => {}
+
 export interface UseSoundsOptions {
   enabled: boolean
 }
@@ -166,7 +153,11 @@ export interface UseSoundsOptions {
 export function useSounds({ enabled }: UseSoundsOptions) {
   useEffect(() => {
     if (!enabled) return
-    const handler = () => unlockAudio()
+    const handler = () => {
+      unlockAudio()
+      const ac = getCtx()
+      if (ac) preloadPhrases(ac)
+    }
     document.addEventListener('touchstart', handler, { once: true })
     document.addEventListener('click', handler, { once: true })
     return () => {
@@ -175,14 +166,25 @@ export function useSounds({ enabled }: UseSoundsOptions) {
     }
   }, [enabled])
 
-  const playCorrect = useCallback(() => { if (enabled) play(correctSound) }, [enabled])
+  const playCorrect = useCallback(() => {
+    if (!enabled) return
+    unlockAudio()
+    const ac = getCtx()
+    if (ac) {
+      preloadPhrases(ac)
+      playCorrectPhrase(ac)
+    }
+  }, [enabled])
   const playWrong = useCallback(() => { if (enabled) play(wrongSound) }, [enabled])
-  const playStreak = useCallback(() => { if (enabled) play(streakSound) }, [enabled])
-  const playComplete = useCallback(() => { if (enabled) play(completeSound) }, [enabled])
-  const playClick = useCallback(() => { if (enabled) play(clickSound) }, [enabled])
 
   return useMemo(
-    () => ({ playCorrect, playWrong, playStreak, playComplete, playClick }),
-    [playCorrect, playWrong, playStreak, playComplete, playClick],
+    () => ({
+      playCorrect,
+      playWrong,
+      playStreak: playCorrect,
+      playComplete: noop,
+      playClick: noop,
+    }),
+    [playCorrect, playWrong],
   )
 }
