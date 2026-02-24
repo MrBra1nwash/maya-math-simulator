@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/store/useAppStore'
@@ -19,20 +19,18 @@ export default function ResultsPage() {
   const location = useLocation()
   const { profile, updateProgress } = useAppStore()
   const state = location.state as { result: SessionResult; starsEarned: number } | null
-  const [newAchievements, setNewAchievements] = useState<string[]>([])
-  const [achievementsChecked, setAchievementsChecked] = useState(false)
+  const [newAchievements, setNewAchievements] = useState<string[]>(() => {
+    if (!profile || !state) return []
+    return checkNewAchievements(profile, state.result)
+  })
+  const [achievementsApplied, setAchievementsApplied] = useState(false)
 
-  useEffect(() => {
-    if (!profile || !state || achievementsChecked) return
-    const unlocked = checkNewAchievements(profile, state.result)
-    if (unlocked.length > 0) {
-      setNewAchievements(unlocked)
-      updateProgress({
-        achievements: [...profile.progress.achievements, ...unlocked],
-      })
-    }
-    setAchievementsChecked(true)
-  }, [profile, state, achievementsChecked, updateProgress])
+  if (newAchievements.length > 0 && !achievementsApplied && profile) {
+    setAchievementsApplied(true)
+    updateProgress({
+      achievements: [...profile.progress.achievements, ...newAchievements],
+    })
+  }
 
   const handleAchievementsDone = useCallback(() => {
     setNewAchievements([])

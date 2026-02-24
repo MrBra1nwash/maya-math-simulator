@@ -31,7 +31,6 @@ export default function TrainingPage() {
 
   const [inputValue, setInputValue] = useState('')
   const [answerState, setAnswerState] = useState<AnswerState>('answering')
-  const [choices, setChoices] = useState<number[]>([])
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
   const [sessionStreak, setSessionStreak] = useState(0)
   const [timer, setTimer] = useState(0)
@@ -48,17 +47,21 @@ export default function TrainingPage() {
   }, [currentSession, navigate])
 
   const currentQuestion = currentSession?.questions[currentSession.currentIndex]
+  const allowNegative = profile?.settings.negativeNumbers ?? false
+  const [choicesState, setChoicesState] = useState<{ id: string; values: number[] }>({ id: '', values: [] })
 
-  useEffect(() => {
-    if (currentQuestion) {
-      const allowNegative = profile?.settings.negativeNumbers ?? false
-      setChoices(generateChoices(currentQuestion.correctAnswer, currentQuestion.difficulty, allowNegative))
-      setInputValue('')
-      setSelectedChoice(null)
-      setAnswerState('answering')
-      setMascotMood('thinking')
-    }
-  }, [currentQuestion, setMascotMood])
+  if (currentQuestion && choicesState.id !== currentQuestion.id) {
+    setChoicesState({
+      id: currentQuestion.id,
+      values: generateChoices(currentQuestion.correctAnswer, currentQuestion.difficulty, allowNegative),
+    })
+    setInputValue('')
+    setSelectedChoice(null)
+    setAnswerState('answering')
+    setPendingWrongAnswer(null)
+    setMascotMood('thinking')
+  }
+  const choices = choicesState.values
 
   useEffect(() => {
     if (!currentSession?.config.timerEnabled) return
@@ -108,7 +111,7 @@ export default function TrainingPage() {
     isEndingRef.current = true
     endSession()
     navigate('/results', { state: { result, starsEarned } })
-  }, [currentSession, profile, sessionStreak, addSessionResult, updateProgress, endSession, navigate])
+  }, [currentSession, profile, sessionStreak, addSessionResult, updateProgress, endSession, navigate, sounds])
 
   const processAnswer = useCallback((userAnswer: number) => {
     if (!currentQuestion || !currentSession) return
@@ -147,7 +150,7 @@ export default function TrainingPage() {
       setSessionStreak(0)
       setPendingWrongAnswer(userAnswer)
     }
-  }, [currentQuestion, currentSession, answerState, answerQuestion, setMascotMood, finishSession])
+  }, [currentQuestion, currentSession, answerState, answerQuestion, setMascotMood, finishSession, sessionStreak, sounds])
 
   const handleKeyboardSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -174,9 +177,6 @@ export default function TrainingPage() {
   if (!currentSession || !currentQuestion) return null
 
   const progressPercent = (currentSession.currentIndex / currentSession.config.questionCount) * 100
-  const mascotMood = answerState === 'correct' ? 'happy' as const
-    : answerState === 'wrong_first' || answerState === 'wrong_final' ? 'sad' as const
-    : 'thinking' as const
 
   const formatTimer = (seconds: number) => {
     const m = Math.floor(seconds / 60)

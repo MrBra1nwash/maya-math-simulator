@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { useState } from 'react'
 
 const CONFETTI_COLORS = ['#FF6B9D', '#7C5CFC', '#FFB347', '#4ECDC4', '#FF6B6B', '#C44DFF', '#45B7D1', '#FFA07A']
 const CONFETTI_SHAPES = ['●', '■', '▲', '★', '♦']
@@ -12,22 +12,26 @@ interface ConfettiPiece {
   delay: number
   rotation: number
   size: number
+  drift: number
+  duration: number
+}
+
+function buildPieces(): ConfettiPiece[] {
+  return Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    shape: CONFETTI_SHAPES[i % CONFETTI_SHAPES.length],
+    x: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    rotation: Math.random() * 360,
+    size: 8 + Math.random() * 14,
+    drift: (Math.random() - 0.5) * 100,
+    duration: 2.5 + Math.random() * 1.5,
+  }))
 }
 
 export default function ConfettiOverlay({ active = true }: { active?: boolean }) {
-  const pieces: ConfettiPiece[] = useMemo(
-    () =>
-      Array.from({ length: 50 }, (_, i) => ({
-        id: i,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        shape: CONFETTI_SHAPES[i % CONFETTI_SHAPES.length],
-        x: Math.random() * 100,
-        delay: Math.random() * 0.8,
-        rotation: Math.random() * 360,
-        size: 8 + Math.random() * 14,
-      })),
-    [],
-  )
+  const [pieces] = useState(buildPieces)
 
   if (!active) return null
 
@@ -48,10 +52,10 @@ export default function ConfettiOverlay({ active = true }: { active?: boolean })
             y: ['-5vh', '110vh'],
             rotate: [0, piece.rotation + 720],
             opacity: [1, 1, 0],
-            x: [0, (Math.random() - 0.5) * 100],
+            x: [0, piece.drift],
           }}
           transition={{
-            duration: 2.5 + Math.random() * 1.5,
+            duration: piece.duration,
             delay: piece.delay,
             ease: 'easeIn',
           }}

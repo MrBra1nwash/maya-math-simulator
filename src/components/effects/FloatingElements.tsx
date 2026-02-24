@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { useState } from 'react'
 
 const SHAPES = ['⭐', '✨', '🌟', '💫', '☁️', '🪄', '💜', '💖']
 
@@ -13,20 +13,20 @@ interface FloatingItem {
   delay: number
 }
 
+function buildItems(count: number): FloatingItem[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    emoji: SHAPES[i % SHAPES.length],
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: 12 + Math.random() * 20,
+    duration: 6 + Math.random() * 10,
+    delay: Math.random() * 5,
+  }))
+}
+
 export default function FloatingElements({ count = 15 }: { count?: number }) {
-  const items: FloatingItem[] = useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => ({
-        id: i,
-        emoji: SHAPES[i % SHAPES.length],
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 12 + Math.random() * 20,
-        duration: 6 + Math.random() * 10,
-        delay: Math.random() * 5,
-      })),
-    [count],
-  )
+  const [items] = useState(() => buildItems(count))
 
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">

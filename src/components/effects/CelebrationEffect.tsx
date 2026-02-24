@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface CelebrationEffectProps {
   active: boolean
@@ -63,24 +63,24 @@ function buildParticles(emojis: string[], count: number): Particle[] {
   })
 }
 
+function buildData(isStreak: boolean) {
+  const c = pickCelebration(isStreak)
+  return { celebration: c, particles: buildParticles(c.emojis, isStreak ? 18 : 12) }
+}
+
 export default function CelebrationEffect({ active, streak = 0 }: CelebrationEffectProps) {
+  const isStreak = streak > 0 && streak % 5 === 0
+  const [prev, setPrev] = useState(false)
+  const [data, setData] = useState(() => buildData(isStreak))
   const [triggerKey, setTriggerKey] = useState(0)
 
-  useEffect(() => {
-    if (active) setTriggerKey((k) => k + 1)
-  }, [active])
-
-  const isStreak = streak > 0 && streak % 5 === 0
-  const [data, setData] = useState(() => {
-    const c = pickCelebration(isStreak)
-    return { celebration: c, particles: buildParticles(c.emojis, isStreak ? 18 : 12) }
-  })
-
-  useEffect(() => {
-    if (triggerKey === 0) return
-    const c = pickCelebration(isStreak)
-    setData({ celebration: c, particles: buildParticles(c.emojis, isStreak ? 18 : 12) })
-  }, [triggerKey, isStreak])
+  if (active && !prev) {
+    setData(buildData(isStreak))
+    setTriggerKey((k) => k + 1)
+  }
+  if (active !== prev) {
+    setPrev(active)
+  }
 
   const { celebration, particles } = data
 
